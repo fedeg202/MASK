@@ -4,10 +4,10 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setuptools.setup(
-    name="nome_libreria",
+    name="mask",
     version="1.0.0",
-    author="Tuo Nome",
-    author_email="tua_email@example.com",
+    author="Federico Garau",
+    author_email="fedegarau02@gmail.com",
     description="Breve descrizione della libreria",
     long_description=long_description,
     long_description_content_type="text/markdown",
