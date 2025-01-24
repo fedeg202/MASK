@@ -1,7 +1,7 @@
 from pandas import DataFrame
 import math
 import numpy as np
-from numpy.linalg import inv
+
 
 def support(T: DataFrame ,X_U_Y: list | dict):
     '''

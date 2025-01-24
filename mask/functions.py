@@ -1,6 +1,6 @@
 from pandas import DataFrame
 import random
-import utility
+from . import utility
 from numpy.linalg import inv
 import math
 import itertools
