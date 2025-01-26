@@ -205,3 +205,17 @@ def MASK_Support(linC_D,db_cardinality,M_inv = None):
     return C_T_11/db_cardinality
 
 
+def R_1(s_0,p):
+    return ((s_0 * math.pow(p,2))/((s_0*p)+(1-s_0)*(1-p)))+((s_0 * math.pow(1-p,2))/((s_0*(1-p))+(1-s_0)*p))
+
+def R_0(s_0,p):
+    return (((1-s_0) * math.pow(p,2))/(((1-s_0)*p)+s_0*(1-p)))+(((1-s_0) * math.pow(1-p,2))/((s_0*p)+(1-s_0)*(1-p)))
+
+def R(s_0,p,a):
+    return a*R_1(s_0,p)+(1-a)*R_0(s_0,p)
+
+def mean_support(inventory, dataset):
+    support_vector = []
+    for item in inventory:
+        support_vector.append(support(dataset,item))
+    return np.mean(support_vector)

@@ -22,7 +22,7 @@ class Rule:
     
 
 class AprioriRule(Rule):
-    def __init__(self,itemset: list | dict,support: float64 = 0):
+    def __init__(self,itemset: list | dict,support: float = 0):
         super().__init__(itemset,support)
 
 class MASKRule(Rule):

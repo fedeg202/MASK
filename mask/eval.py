@@ -1,3 +1,6 @@
+from MASK.mask.utility import utility_fun
+import numpy as np
+
 def support_error(AprioriRuleslevel,MASKRuleslevel):
     
     sum = 0
@@ -37,3 +40,12 @@ def identity_error(AprioriRulesLevel,MASKRulesLevel):
         false_negative = false_negative_cnt/F
         return false_positive, false_negative
     else: return 0,0
+
+def P(s_0,p,a):
+    return (1-utility_fun.R(s_0,p,a))*100
+
+def mean_support(inventory, dataset):
+    support_vector = []
+    for item in inventory:
+        support_vector.append(utility_fun.support(dataset,item))
+    return np.mean(support_vector)
