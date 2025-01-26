@@ -1,6 +1,6 @@
 from pandas import DataFrame
 import random
-from . import utility
+from MASK.mask.utility import utility_fun,classes
 from numpy.linalg import inv
 import math
 import itertools
@@ -26,54 +26,73 @@ def MASK_Distortion(dataset: DataFrame, p: float):
 
 
 
-
-def MASK_Support(dataset:DataFrame, rule, p:float, M_inv = None):
-    if M_inv is None:
-        M_inv = inv(
-            utility.computeM(
-                size=int(math.pow(2,len(rule))),
-                p=p
-            )
-        )
-
-    linC_D = utility.computeLinC_D(dataset,rule)
-
-    #print(linC_D)
-    #print(M_inv)
-
-    C_T_11 = utility.vectormatrixProdMod(linC_D,M_inv)
-
-    #print(C_T_11)
-
-    return C_T_11/len(dataset)
-
-
-def MASK_Apriori(dataset: DataFrame, p: float, min_sup,levels: int = None):
+def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = None):
     if levels is None:
         levels = len(dataset.columns)
     rules = [
         [],
-        [ [item] for item in dataset.columns ]
     ]
-
-    for i in range(2, levels+1):
-        print(f"Constructing Level: {i}")
-        combinations = list(itertools.combinations(dataset.columns,i))
-        rule_i = [list(c) for c in combinations]
-        rules.append(rule_i)
-        
+    frequent_itemsets = [[]]
+    infrequent_itemsets = [[]]
 
     for i in range(1,levels+1):
-        print(f"Analysing Level: {i}")
-        size = int(math.pow(2,i))
-        M_inv = inv(
-            utility.computeM(size,p)
-        )
-        
-        rules[i] = [
-            rule
-            for rule in rules[i]
-            if MASK_Support(dataset,rule,p,M_inv) >= min_sup
-        ]
+        print(f"Mask Rule Mining level: {i}")
 
+        combinations = list(itertools.combinations(dataset.columns,i))
+        rule_i = [
+            classes.MASKRule(sorted(list(c)))for c in combinations]
+        rules.append(rule_i)
+
+        frequent_itemsets.append([])
+        infrequent_itemsets.append([])
+
+
+        for tuple in dataset.itertuples():
+
+            item_list = []
+            complement_list=[]
+
+            for item in dataset.columns:
+                if getattr(tuple,item) == 1 and item not in infrequent_itemsets[i-1]:
+                    item_list.append(item)
+            for item in frequent_itemsets[i-1]:
+                if item not in item_list:
+                    complement_list.append(item)
+
+           
+            for rule in rules[i]:
+                bit_counter = 0
+                for item in rule.itemset:
+                    if item in item_list:
+                        bit_counter += 1
+                
+                rule.counters[bit_counter]+=1
+            
+        
+        
+
+        for j in range(len(rules[i])-1,-1,-1):
+
+            size = int(math.pow(2,i))
+            M_inv = inv(
+                utility_fun.computeM(size,p)
+            )
+
+            sup = utility_fun.MASK_Support(rules[i][j].counters,len(dataset),M_inv)
+
+            if sup >= min_sup:
+                rules[i][j].support = sup
+                for item in rules[i][j].itemset:
+                    if item not in frequent_itemsets[i]:
+                        frequent_itemsets[i].append(item)
+
+            else:
+                rules[i].remove(rules[i][j])
+                for item in rule.itemset:
+                    if item not in infrequent_itemsets[i]:
+                        infrequent_itemsets[i].append(item)
+            
+        if len(rules[i]) == 0:
+            break
+    
     return rules

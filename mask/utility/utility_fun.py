@@ -1,6 +1,7 @@
 from pandas import DataFrame
 import math
 import numpy as np
+from numpy.linalg import inv
 
 
 def support(T: DataFrame ,X_U_Y: list | dict):
@@ -189,5 +190,18 @@ def vectormatrixProdMod(linC_D,matrix):
         sum += row[index]*linC_D[j]
     return sum
 
+
+def MASK_Support(linC_D,db_cardinality,M_inv = None):
+    if M_inv is None:
+        M_inv = inv(
+            computeM(
+                size=int(math.pow(2,len(linC_D)-1)),
+                p=p
+            )
+        )
+
+    C_T_11 = vectormatrixProdMod(linC_D,M_inv)
+
+    return C_T_11/db_cardinality
 
 
