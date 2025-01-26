@@ -1,6 +1,6 @@
 from pandas import DataFrame
 import random
-from MASK.mask.utility import utility_fun,classes
+from .utility import utility_fun,classes
 from numpy.linalg import inv
 import math
 import itertools

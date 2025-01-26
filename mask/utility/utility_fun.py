@@ -191,7 +191,8 @@ def vectormatrixProdMod(linC_D,matrix):
     return sum
 
 
-def MASK_Support(linC_D,db_cardinality,M_inv = None):
+def MASK_Support(linC_D,db_cardinality,M_inv = None,p = None):
+    if M_inv is None and p is None: return ValueError
     if M_inv is None:
         M_inv = inv(
             computeM(
