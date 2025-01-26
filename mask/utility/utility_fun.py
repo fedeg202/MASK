@@ -218,5 +218,5 @@ def R(s_0,p,a):
 def mean_support(inventory, dataset):
     support_vector = []
     for item in inventory:
-        support_vector.append(support(dataset,item))
+        support_vector.append(support(dataset,[item]))
     return np.mean(support_vector)
