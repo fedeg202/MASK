@@ -31,17 +31,13 @@ def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = 
         levels = len(dataset.columns)
     rules = [
         [],
+        [classes.MASKRule([item]) for item in dataset.columns]
     ]
     frequent_itemsets = [[]]
     infrequent_itemsets = [[]]
 
     for i in range(1,levels+1):
         print(f"Mask Rule Mining level: {i}")
-
-        combinations = list(itertools.combinations(dataset.columns,i))
-        rule_i = [
-            classes.MASKRule(sorted(list(c)))for c in combinations]
-        rules.append(rule_i)
 
         frequent_itemsets.append([])
         infrequent_itemsets.append([])
@@ -94,5 +90,16 @@ def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = 
             
         if len(rules[i]) == 0:
             break
+
+        rules.append([])
+
+        for rule in rules[i]:
+            for r in rules[1]:
+                if r.itemset[0] not in rule.itemset:
+                    itemset =  rule.itemset + r.itemset
+                    itemset.sort()
+                    new_rule = classes.MASKRule(itemset)
+                    if new_rule not in rules[i+1]:
+                        rules[i+1].append(new_rule)
     
     return rules
