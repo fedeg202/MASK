@@ -87,8 +87,9 @@ def Apriori(items, dataset, min_sup, levels: int = None):
     '''
     rules = [
         [],
-        [ [item] for item in items ]
+        [ AprioriRule([item]) for item in items ]
     ]
+
 
 
     # iterate over all the possible rules length from 1 to len(items)
@@ -98,13 +99,13 @@ def Apriori(items, dataset, min_sup, levels: int = None):
         # that don't have a support of at least min_sup
 
         #print(f"RULES[{i}] BEFORE", rules[i])
-
-        rules[i] = [
-            rule
-            for rule in rules[i]
-            if support(dataset, rule) >= min_sup
-        ]
-        
+        for j in range(len(rules[i])-1,-1,-1):
+            sup = support(dataset,rules[i][j].itemset)
+            if sup >= min_sup:
+                rules[i][j].support = sup
+            else:
+                rules[i].remove(rules[i][j])
+    
         '''
         print(f"RULES[{i}] SUPPORT", [
             support(dataset, rule)
@@ -126,21 +127,21 @@ def Apriori(items, dataset, min_sup, levels: int = None):
         #print("RULE[i]", rules[i])
         #print("RULE[i+1]", rules[i+1])
         for rule in rules[i]:
-            for item in items:
+            for j in range(0,len(rules[1])):
 
                 # skip if item is already inside the rule
-                if item in rule:
+                if rules[i][j].itemset in rule.itemset:
                     continue
+                
+                itemset = rule.itemset + rules[i][j].itemset
+                itemset.sort()
 
-                rules[i+1].append ( rule + [item] )
+                new_rule = AprioriRule(itemset)
+                if new_rule not in rules[i+1]:
+
+                    rules[i+1].append (rule)
                 # create a new rule composed of rule + [item]
 
-
-        #print("RULE[i+1]", rules[i+1])
-    
-        #print()
-        #print()
-        #print()
 
     return rules
 
