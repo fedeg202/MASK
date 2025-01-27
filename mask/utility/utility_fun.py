@@ -131,16 +131,16 @@ def Apriori(items, dataset, min_sup, levels: int = None):
             for j in range(0,len(rules[1])):
 
                 # skip if item is already inside the rule
-                if rules[i][j].itemset in rule.itemset:
+                if rules[1][j].itemset in rule.itemset:
                     continue
                 
-                itemset = rule.itemset + rules[i][j].itemset
+                itemset = rule.itemset + rules[1][j].itemset
                 itemset.sort()
 
                 new_rule = AprioriRule(itemset)
                 if new_rule not in rules[i+1]:
 
-                    rules[i+1].append (rule)
+                    rules[i+1].append(new_rule)
                 # create a new rule composed of rule + [item]
 
 
