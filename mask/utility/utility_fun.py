@@ -131,7 +131,7 @@ def Apriori(items, dataset, min_sup, levels: int = None):
             for j in range(0,len(rules[1])):
 
                 # skip if item is already inside the rule
-                if rules[1][j].itemset in rule.itemset:
+                if rules[1][j].itemset[0] in rule.itemset:
                     continue
                 
                 itemset = rule.itemset + rules[1][j].itemset
