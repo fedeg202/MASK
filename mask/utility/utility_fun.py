@@ -3,6 +3,8 @@ import math
 import numpy as np
 from numpy.linalg import inv
 
+from MASK.mask.utility.classes import AprioriRule
+
 
 def support(T: DataFrame ,X_U_Y: list | dict):
     '''
