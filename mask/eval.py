@@ -1,4 +1,4 @@
-from MASK.mask.utility import utility_fun
+from mask.utility import utility_fun
 import numpy as np
 
 def support_error(AprioriRuleslevel,MASKRuleslevel):
