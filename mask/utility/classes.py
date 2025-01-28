@@ -14,7 +14,7 @@ class Rule:
     
     def __eq__(self, other):
         if isinstance(other, Rule):
-            return set(self.itemset) == set(other.itemset)
+            return set((self.itemset).sort()) == set((other.itemset).sort())
         return False
     
     def __iter__(self):
