@@ -33,28 +33,20 @@ def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = 
         [],
         [classes.MASKRule([item]) for item in dataset.columns]
     ]
-    frequent_itemsets = [[]]
-    infrequent_itemsets = [[]]
+
+    infrequent_itemsets = []
 
     for i in range(1,levels+1):
-        print(f"Mask Rule Mining level: {i}")
-
-        frequent_itemsets.append([])
-        infrequent_itemsets.append([])
+        print(f"new Mask Rule Mining level: {i}")
 
 
         for tuple in dataset.itertuples():
 
             item_list = []
-            complement_list=[]
 
             for item in dataset.columns:
-                if getattr(tuple,item) == 1 and item not in infrequent_itemsets[i-1]:
+                if getattr(tuple,item) == 1 and item not in infrequent_itemsets:
                     item_list.append(item)
-            for item in frequent_itemsets[i-1]:
-                if item not in item_list:
-                    complement_list.append(item)
-
            
             for rule in rules[i]:
                 bit_counter = 0
@@ -78,15 +70,11 @@ def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = 
 
             if sup >= min_sup:
                 rules[i][j].support = sup
-                for item in rules[i][j].itemset:
-                    if item not in frequent_itemsets[i]:
-                        frequent_itemsets[i].append(item)
 
             else:
+                if i == 1 and rules[i][j].itemset[0] not in infrequent_itemsets:
+                    infrequent_itemsets.append(item)         
                 rules[i].remove(rules[i][j])
-                for item in rule.itemset:
-                    if item not in infrequent_itemsets[i]:
-                        infrequent_itemsets[i].append(item)
             
         if len(rules[i]) == 0:
             break
