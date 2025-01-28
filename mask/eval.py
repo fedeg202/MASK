@@ -39,7 +39,7 @@ def identity_error(AprioriRulesLevel,MASKRulesLevel):
         false_positive = false_positive_cnt/F
         false_negative = false_negative_cnt/F
         return false_positive, false_negative
-    elif F == 0 and false_positive>0:
+    elif F == 0 and false_positive_cnt>0:
         return 100,0
     else:
         return 0,0
