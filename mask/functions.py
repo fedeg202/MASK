@@ -37,7 +37,7 @@ def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = 
     infrequent_itemsets = []
 
     for i in range(1,levels+1):
-        print(f"new Mask Rule Mining level: {i}")
+        print(f"Mask Rule Mining level: {i}")
 
 
         for tuple in dataset.itertuples():

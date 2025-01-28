@@ -27,11 +27,11 @@ def identity_error(AprioriRulesLevel,MASKRulesLevel):
 
     for rule in AprioriRulesLevel:
         if rule not in MASKRulesLevel:
-            false_positive_cnt += 1
+            false_negative_cnt += 1
     
     for rule in MASKRulesLevel:
         if rule not in AprioriRulesLevel:
-            false_negative_cnt += 1
+            false_positive_cnt += 1
     
     F = len(AprioriRulesLevel)
 
@@ -39,7 +39,10 @@ def identity_error(AprioriRulesLevel,MASKRulesLevel):
         false_positive = false_positive_cnt/F
         false_negative = false_negative_cnt/F
         return false_positive, false_negative
-    else: return 0,0
+    elif F == 0 and false_positive>0:
+        return 100,0
+    else:
+        return 0,0
 
 def P(s_0,p,a):
     return (1-utility_fun.R(s_0,p,a))*100
