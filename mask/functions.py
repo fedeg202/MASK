@@ -26,10 +26,10 @@ def MASK_Distortion(dataset: DataFrame, p: float):
 
 
 
-def MASK_Frequent_itemsets(dataset: DataFrame, p: float, min_sup: float,levels: int = None):
+def MASK_frequent_itemsets(dataset: DataFrame, p: float, min_sup: float,levels: int = None):
 
 
-    def _support(linC_D,db_cardinality):
+    def _support(linC_D,db_cardinality,M_inv):
         if M_inv is None and p is None: return ValueError
         if M_inv is None:
             M_inv = inv(
