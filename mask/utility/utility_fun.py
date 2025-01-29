@@ -3,6 +3,7 @@ import math
 import numpy as np
 from numpy.linalg import inv
 from mask.utility.classes import AprioriRule
+from mlxtend.frequent_patterns import apriori
 
 
 def support(T: DataFrame ,X_U_Y: list | dict):
@@ -74,77 +75,23 @@ def confidence(T: DataFrame, X: list | dict, Y: list | dict):
 
 
 
-def Apriori(items, dataset, min_sup, levels: int = None):
+def Apriori(dataset: DataFrame, min_sup, levels: int = None):
     if levels is None:
-        levels = len(items)
-    '''
-    rules[0] = empty set
-    rules[1] = rules of length 1
-    rules[2] = rules of length 2
-
-
-    rules[len(items)] = items
-    ...
-    '''
-    rules = [
-        [],
-        [ AprioriRule([item]) for item in items ]
-    ]
-
-
-
-    # iterate over all the possible rules length from 1 to len(items)
-    for i in range(1, levels+1):
-        print(f"Apriori Level: {i}")
-        # remove all the rules in rules[i]
-        # that don't have a support of at least min_sup
-
-        #print(f"RULES[{i}] BEFORE", rules[i])
-        for j in range(len(rules[i])-1,-1,-1):
-            sup = support(dataset,rules[i][j].itemset)
-            if sup >= min_sup:
-                rules[i][j].support = sup
-            else:
-                rules[i].remove(rules[i][j])
-    
-        '''
-        print(f"RULES[{i}] SUPPORT", [
-            support(dataset, rule)
-            for rule in rules[i]
-        ]
-        )'''
-
-
-        #print(f"RULES[{i}] AFTER", rules[i])
-
-        if len(rules[i]) == 0:
-            break
-
-
-        # generate all the possibile 
-        # rules with i+1 elements
-        rules.append([]) # create the element rules[i+1]
-
-        #print("RULE[i]", rules[i])
-        #print("RULE[i+1]", rules[i+1])
-        for rule in rules[i]:
-            for j in range(0,len(rules[1])):
-
-                # skip if item is already inside the rule
-                if rules[1][j].itemset[0] in rule.itemset:
-                    continue
-                
-                itemset = rule.itemset + rules[1][j].itemset
-                itemset.sort()
-
-                new_rule = AprioriRule(itemset)
-                if new_rule not in rules[i+1]:
-
-                    rules[i+1].append(new_rule)
-                # create a new rule composed of rule + [item]
-
-
+        levels = len(dataset.columns)
+    frequent_itemsets = apriori(dataset, min_support=min_sup, use_colnames=True)
+    frequent_itemsets['size'] = frequent_itemsets['itemsets'].apply(len)
+    rules = [[]]
+    for i in range(1,levels):
+        itemsets_size = frequent_itemsets[frequent_itemsets['size'] == i]
+        if len(itemsets_size) == 0: break
+        supports_size = itemsets_size['support'].values
+        itemsets = itemsets_size['itemsets'].values
+        rules.append([])
+        for itemset, support in zip(itemsets, supports_size):
+            new_rule = AprioriRule(list(itemset),support)
+            rules[i].append(new_rule)
     return rules
+
 
 
 def hammingDistanceBitwise(a:int,b:int):
@@ -169,14 +116,8 @@ def computeM(size: int, p: float):
 
 def computeLinC_D(dataset: DataFrame,rule: list | dict):
     linC_D = np.zeros(len(rule)+1,dtype=int)
-    reducted_ds = dataset[rule] # posso prendere solo le colonne interessanti
+    reducted_ds = dataset[rule]
     for tuple in reducted_ds.itertuples(False):
-        '''sum = 0
-        for attribute in rule:
-            sum += getattr(tuple,attribute) # o farlo qua con il for
-            linC_D[sum] += 1
-        '''
-        
         linC_D[np.sum(tuple,axis=0)] += 1
     
     return linC_D
@@ -188,24 +129,25 @@ def vectormatrixProdMod(linC_D,matrix):
     sum=0
     for j in range(len(linC_D)):
         index = int(math.pow(2,j))-1
-        #print(str(row[index])+" * "+str(linC_D[j]))
         sum += row[index]*linC_D[j]
     return sum
 
 
-def MASK_Support(linC_D,db_cardinality,M_inv = None,p = None):
+def MASK_Support(dataset: DataFrame,rule,M_inv = None,p = None):
     if M_inv is None and p is None: return ValueError
     if M_inv is None:
         M_inv = inv(
             computeM(
-                size=int(math.pow(2,len(linC_D)-1)),
+                size=int(math.pow(2,len(rule)-1)),
                 p=p
             )
         )
 
+    linC_D = computeLinC_D(dataset,rule)
+
     C_T_11 = vectormatrixProdMod(linC_D,M_inv)
 
-    return C_T_11/db_cardinality
+    return C_T_11/len(dataset)
 
 
 def R_1(s_0,p):

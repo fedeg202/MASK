@@ -26,7 +26,24 @@ def MASK_Distortion(dataset: DataFrame, p: float):
 
 
 
-def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = None):
+def MASK_Frequent_itemsets(dataset: DataFrame, p: float, min_sup: float,levels: int = None):
+
+
+    def _support(linC_D,db_cardinality):
+        if M_inv is None and p is None: return ValueError
+        if M_inv is None:
+            M_inv = inv(
+                utility_fun.computeM(
+                    size=int(math.pow(2,len(linC_D)-1)),
+                    p=p
+                )
+            )
+
+        C_T_11 = utility_fun.vectormatrixProdMod(linC_D,M_inv)
+
+        return C_T_11/db_cardinality
+
+
     if levels is None:
         levels = len(dataset.columns)
     rules = [
@@ -66,7 +83,7 @@ def MASK_Rule_Mining(dataset: DataFrame, p: float, min_sup: float,levels: int = 
                 utility_fun.computeM(size,p)
             )
 
-            sup = utility_fun.MASK_Support(rules[i][j].counters,len(dataset),M_inv)
+            sup = _support(rules[i][j].counters,len(dataset),M_inv)
 
             if sup >= min_sup:
                 rules[i][j].support = sup
