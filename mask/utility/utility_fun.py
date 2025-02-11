@@ -6,90 +6,86 @@ from mask.utility.classes import AprioriRule
 from mlxtend.frequent_patterns import apriori
 
 
-def support(T: DataFrame ,X_U_Y: list | dict):
-    '''
-    Parameters:
-    T (dataframe)
-    X_U_Y (list | dict) : name of the attributes considered (X U Y)
-    Return:
-    float: support of the attributes in the dataset
-    '''
+def support(T: DataFrame ,X_U_Y: list | dict) -> float:
+    """
+    Computes the support of given attributes in the dataset.
+
+    Parameters
+    ----------
+    T : pandas DataFrame
+        The dataset containing transactions.
+    X_U_Y : list or dict
+        The names of the attributes considered (X ∪ Y).
+
+    Returns
+    -------
+    float
+        The support of the attributes in the dataset.
+    """
     for attribute in X_U_Y:
         if attribute not in T.columns:
-             return ValueError
-    count = 0
-    for tuple in T.itertuples(False):
-        contained = True
-        for attribute in X_U_Y:
-            try: 
-                if getattr(tuple,attribute) == 0:
-                    contained = False
-                    break
-            except AttributeError:
-                contained = False,
-                break
-
-        if contained:
-            count += 1 
-    return count/len(T)
-
-
-
-
-def confidence(T: DataFrame, X: list | dict, Y: list | dict):
-    '''
-    Parameters:
-    T (dataframe)
-    X ( list | dict): X part of X ==> Y rule
-    X (list | dict): Y part of X ==> Y rule
-    '''
-    if len(X)+len(Y) > len(T.columns):
-        return ValueError
-    for item in X:
-        if Y.__contains__(item):
-            return ValueError # XY = empty set
+            raise ValueError("Attribute not found in dataset.")
     
-    countX=0
-    countY=0
-    for tuple in T.itertuples():
-        containedX = True
-        for attribute in X:
-            if getattr(tuple,attribute) == 0:
-                containedX = False
-                break
-        if containedX:
-            countX += 1
-            containedY=True
-            for attribute in Y:
-                if attribute == '':
-                    containedY = False
-                    break
-                if getattr(tuple,attribute) == 0:
-                    containedY = False
-                    break
-            if containedY:
-                countY += 1
-    return countY/countX    
+    count = sum(all(getattr(tuple, attr) == 1 for attr in X_U_Y) for tuple in T.itertuples(False))
+    return count / len(T)
 
+def confidence(T: DataFrame, X: list | dict, Y: list | dict) -> float:
+    """
+    Computes the confidence of rule X ⇒ Y.
 
+    Parameters
+    ----------
+    T : pandas DataFrame
+        The dataset containing transactions.
+    X : list or dict
+        The antecedent (X) of the rule.
+    Y : list or dict
+        The consequent (Y) of the rule.
 
+    Returns
+    -------
+    float
+        The confidence value of the rule X ⇒ Y.
+    """
+    if len(X) + len(Y) > len(T.columns):
+        raise ValueError("Invalid rule: More attributes than dataset columns.")
+    if any(item in Y for item in X):
+        raise ValueError("Invalid rule: X and Y must be disjoint.")
+    
+    countX = sum(all(getattr(tuple, attr) == 1 for attr in X) for tuple in T.itertuples(False))
+    countXY = sum(all(getattr(tuple, attr) == 1 for attr in X + Y) for tuple in T.itertuples(False))
+    
+    return countXY / countX if countX else 0
 
+def Apriori(dataset: DataFrame, min_sup: float, levels: int = None):
+    """
+    Implements the Apriori algorithm to find frequent itemsets.
 
-def Apriori(dataset: DataFrame, min_sup, levels: int = None):
+    Parameters
+    ----------
+    dataset : pandas DataFrame
+        The dataset containing transactions.
+    min_sup : float
+        The minimum support threshold.
+    levels : int, optional
+        Maximum length of itemsets to consider. Defaults to all itemsets.
+
+    Returns
+    -------
+    list
+        A list of frequent itemsets with their support values.
+    """
     if levels is None:
         levels = len(dataset.columns)
     frequent_itemsets = apriori(dataset, min_support=min_sup, use_colnames=True)
     frequent_itemsets['size'] = frequent_itemsets['itemsets'].apply(len)
+    
     rules = [[]]
-    for i in range(1,levels):
+    for i in range(1, levels):
         itemsets_size = frequent_itemsets[frequent_itemsets['size'] == i]
-        if len(itemsets_size) == 0: break
-        supports_size = itemsets_size['support'].values
-        itemsets = itemsets_size['itemsets'].values
-        rules.append([])
-        for itemset, support in zip(itemsets, supports_size):
-            new_rule = AprioriRule(list(itemset),support)
-            rules[i].append(new_rule)
+        if itemsets_size.empty:
+            break
+        rules.append([AprioriRule(list(itemset), support) for itemset, support in zip(itemsets_size['itemsets'], itemsets_size['support'])])
     return rules
 
 
@@ -98,20 +94,35 @@ def hammingDistanceBitwise(a:int,b:int):
     return (a^b).bit_count()
 
 
+def computeM(size: int, p: float) -> np.ndarray:
+    """
+    Computes the transformation matrix M for MASK algorithm.
 
-def computeM(size: int, p: float):
+    Parameters
+    ----------
+    size : int
+        The size of the matrix (based on itemsets count).
+    p : float
+        Probability factor used in MASK.
+
+    Returns
+    -------
+    np.ndarray
+        The transformation matrix.
+    """
     max_exp = int(math.log2(size))
-    M = np.diag([math.pow(p,max_exp) for i in range(size)])
-    for i in range(0,size):
-        for j in range(i+1,size):
-            difference = hammingDistanceBitwise(i,j)
-            M[i][j] = math.pow(1-p,difference)*math.pow(p,max_exp-difference)
-
-    for i in range(1,size):
-        for j in range(i,-1,-1):
+    M = np.diag([math.pow(p, max_exp) for _ in range(size)])
+    for i in range(size):
+        for j in range(i+1, size):
+            difference = bin(i ^ j).count('1')
+            M[i][j] = math.pow(1-p, difference) * math.pow(p, max_exp - difference)
+    
+    for i in range(1, size):
+        for j in range(i):
             M[i][j] = M[j][i]
-
     return M
+
+
 
 
 def computeLinC_D(dataset: DataFrame,rule: list | dict):
