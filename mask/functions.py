@@ -36,7 +36,7 @@ from mask.utility import utility_fun,classes
 from numpy.linalg import inv
 import math
 
-def MASK_frequent_itemsets5(dataset: DataFrame, p: float, min_sup: float, levels: int = None):
+def MASK_frequent_itemsets(dataset: DataFrame, p: float, min_sup: float, levels: int = None):
     """
     Finds frequent itemsets in a distorted transaction dataset using the MASK algorithm.
 
