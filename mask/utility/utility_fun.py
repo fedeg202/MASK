@@ -134,14 +134,16 @@ def computeLinC_D(dataset: DataFrame,rule: list | dict):
     return linC_D
 
 
-def vectormatrixProdMod(linC_D,matrix):
+def vectormatrixProdMod(linC_D, matrix):
     size = matrix.shape[0]
-    row = matrix[size-1]
-    sum=0
-    for j in range(len(linC_D)):
-        index = int(math.pow(2,j))-1
-        sum += row[index]*linC_D[j]
-    return sum
+    row = matrix[size - 1]
+
+    indices = [int(math.pow(2,j))-1 for j in range(len(linC_D))]
+    lin_row = row[indices]
+
+    result = np.dot(lin_row, linC_D)
+    return result
+
 
 
 def MASK_Support(dataset: DataFrame,rule,M_inv = None,p = None):

@@ -30,7 +30,13 @@ def MASK_Distortion(dataset: DataFrame, p: float) -> DataFrame:
 
     return distorted_dataset
 
-def MASK_frequent_itemsets(dataset: DataFrame, p: float, min_sup: float, levels: int = None):
+
+from pandas import DataFrame
+from mask.utility import utility_fun,classes
+from numpy.linalg import inv
+import math
+
+def MASK_frequent_itemsets5(dataset: DataFrame, p: float, min_sup: float, levels: int = None):
     """
     Finds frequent itemsets in a distorted transaction dataset using the MASK algorithm.
 
@@ -74,31 +80,37 @@ def MASK_frequent_itemsets(dataset: DataFrame, p: float, min_sup: float, levels:
     if levels is None:
         levels = len(dataset.columns)
     
+    column_map = {i: item for i, item in enumerate(dataset.columns)}
+
+
     rules = [
         [],
-        [classes.MASKRule([item]) for item in dataset.columns]
+        [classes.MASKRule([item]) for item in column_map.keys()]
     ]
     
+    dataset_list = []
+
+    for transaction in dataset.itertuples():
+        item_list = [item for item in column_map.keys() if getattr(transaction, column_map[item]) == 1]
+        dataset_list.append(item_list)
+
+
     infrequent_itemsets = []
     
     for i in range(1, levels + 1):
         print(f"Mask Rule Mining level: {i}")
         
-        # Counting occurrences of itemsets in transactions
-        for transaction in dataset.itertuples():
-            item_list = [item for item in dataset.columns if getattr(transaction, item) == 1 and item not in infrequent_itemsets]
-            
+        for transaction in dataset_list:
+            transaction = [item for item in transaction if item not in infrequent_itemsets]
             for rule in rules[i]:
-                bit_counter = sum(1 for item in rule.itemset if item in item_list)
+                bit_counter = sum(1 for item in rule.itemset if item in transaction)
                 rule.counters[bit_counter] += 1
         
+        size = int(math.pow(2, i))
+        M_inv = inv(utility_fun.computeM(size, p))
         # Computing support for each itemset
         for j in range(len(rules[i]) - 1, -1, -1):
-            size = int(math.pow(2, i))
-            M_inv = inv(utility_fun.computeM(size, p))
-            
             sup = _support(rules[i][j].counters, len(dataset), M_inv)
-            
             if sup >= min_sup:
                 rules[i][j].support = sup
             else:
@@ -119,4 +131,10 @@ def MASK_frequent_itemsets(dataset: DataFrame, p: float, min_sup: float, levels:
                     if new_rule not in rules[i + 1]:
                         rules[i + 1].append(new_rule)
     
+    for i in range(1,len(rules)):
+        for j in range(len(rules[i])):
+            for k in range(i):
+                rules[i][j].itemset[k] = column_map[rules[i][j].itemset[k]]
+
     return rules
+
